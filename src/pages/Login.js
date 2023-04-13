@@ -1,91 +1,80 @@
-import { useContext, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import Home from "./Home";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login() {
-  const [cookies, setCookies] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  // const [loggedIn, setLoggedIn] = useContext(LoginContext)
-  const [loggedIn, setLoggedIn] = useState(false);
+function Login() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  function login(e) {
-    e.preventDefault();
-    const url = `https://api.crimemap.hopto.org/login?username=${username}&password=${password}`;
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-      }),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data);
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-        if (data.message === "user login success") {
-          setLoggedIn(true);
-          navigate("/");
-          return <Home props={data} />;
-        } else {
-          console.log("try again");
-        }
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    try {
+      // Call your backend API here to validate the username and password
+      const response = await fetch('https://api.crimemap.hopto.org/login', {
+
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+        headers: { 'Content-Type': 'application/json' },
       });
-  }
+
+      if (response.ok) {
+        // Redirect to the homepage if login is successful
+        navigate.push('/');
+      } else {
+        // Display an error message if login fails
+        setError('Invalid username or password');
+      }
+    } catch (error) {
+      console.error(error);
+      setError('Something went wrong. Please try again later.');
+    }
+  };
+
+  const handleCreateAccount = () => {
+    // Redirect the user to the create account page
+    navigate.push('/create-account');
+  };
 
   return (
-    <>
-      <form className="m-2 w-full max-w-sm" id="customer" onSubmit={login}>
-        <div className="md:flex md:items-center mb-6">
-          <div className="md:w-1/4">
-            <label htmlFor="username">Username</label>
-          </div>
-
-          <div className="md:w-3/4">
-            <input
-              id="username"
-              className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-              type="text"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-              }}
-            />
-          </div>
+    <div className="container">
+      <h1>Welcome to CrimeMap</h1>
+      <form onSubmit={handleLogin}>
+        {error && <div className="error">{error}</div>}
+        <div className="form-group">
+          <label htmlFor="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="form-control"
+            placeholder="Enter your username"
+            required
+          />
         </div>
-
-        <div className="md:flex md:items-center mb-6">
-          <div className="md:w-1/4">
-            <label htmlFor="password">Password</label>
-          </div>
-          <div className="md:w-3/4">
-            <input
-              id="password"
-              className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
-            />
-          </div>
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="form-control"
+            placeholder="Enter your password"
+            required
+          />
         </div>
-        <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded no-underline">
-          Login{" "}
+        <button type="submit" className="btn btn-primary">
+          Login
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={handleCreateAccount}>
+          Create Account
         </button>
       </form>
-      <Link to="/register">
-        <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded no-underline ml-3">
-          Register{" "}
-        </button>
-      </Link>
-    </>
+    </div>
   );
 }
+
+export default Login;
